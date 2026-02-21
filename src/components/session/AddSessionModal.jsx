@@ -1,5 +1,31 @@
-function AddSessionModal({isOpen, onClose}){
+import { useState } from "react";
+
+function AddSessionModal({isOpen, onClose, onSave}){   
     if(!isOpen) return null;
+    const [duration, setDuration] = useState("");
+    const [category, setCategory] = useState("DSA");
+    const [date,setDate] = useState("");
+    const [notes, setNotes] = useState("");
+
+    const handleSave = ()=>{
+        const newSession={
+            id: Date.now(),
+            duration : Number(duration),
+            category,
+            date,
+            notes,
+        };
+
+        console.log("New Session:", newSession);
+
+        onSave(newSession);
+        onClose();
+    }
+   
+    
+
+
+
 
     return (
         <div className="fixed inset-0 bg-black/50 flex justify-center items-center">
@@ -13,13 +39,18 @@ function AddSessionModal({isOpen, onClose}){
                     <label className="block text-sm mb-1">Duration (minutes)</label>
                     <input 
                       type="number"
+                      value={duration}
+                      onChange={(e)=> setDuration(e.target.value)}
                       className="w-full p-2 rounded-md bg-zinc-700 outline-none"
                     />
                 </div>
 
                 <div className="mb-4">
                     <label className="block text-sm mb-1">Category</label>
-                    <select className="w-full p-2 rounded-md bg-zinc-700 outline-none">
+                    <select
+                    value={category}
+                    onChange={(e)=> setCategory(e.target.value)}
+                     className="w-full p-2 rounded-md bg-zinc-700 outline-none">
                         <option>DSA</option>
                         <option>Development</option>
                         <option>Revision</option>
@@ -30,6 +61,8 @@ function AddSessionModal({isOpen, onClose}){
                     <label className="block text-sm mb-1">Date</label>
                     <input
                       type="date"
+                      value={date}
+                      onChange={(e)=> setDate(e.target.value)}
                       className="w-full p-2 rounded-md bg-zinc-700 outline-none"
                     />
                 </div>
@@ -37,6 +70,8 @@ function AddSessionModal({isOpen, onClose}){
                 <div className="mb-4">
                     <label className="block text-sm mb-1">Notes</label>
                     <textarea 
+                    value={notes}
+                    onChange={(e)=> setNotes(e.target.value)}
                     className="w-full p-2 rounded-md bg-zinc-700 outline-none"
                     rows="3"
                     />
@@ -50,6 +85,7 @@ function AddSessionModal({isOpen, onClose}){
                 </button>
 
                 <button
+                onClick={handleSave}
                 className="px-4 py-2 bg-blue-600 rounded-lg hover:bg-blue-500 transition"
                 >
                     Save
