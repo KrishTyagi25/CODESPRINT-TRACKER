@@ -1,10 +1,17 @@
 import { useState, useEffect } from "react";
 import AddSessionModal from "../components/session/AddSessionModal";
 
-
 function Dashboard() {
     const [isOpen, setIsOpen] = useState(false);
-    const [sessions, setSessions] = useState([]);
+    const [sessions, setSessions] = useState(() => {
+        const stored = localStorage.getItem("sessions");
+        return stored ? JSON.parse(stored) : [];
+    });
+
+    console.log("Sessions:", sessions);
+
+
+
 
 
 
@@ -19,27 +26,76 @@ function Dashboard() {
 
     const todayMinutes = sessions
         .filter((s) => s.date === today)
+
         .reduce((acc, curr) => acc + curr.duration, 0);
 
     const todayHours = (todayMinutes / 60).toFixed(1);
 
-    const hasTodaySession = sessions.some((s) => s.date === today);
-    const currentStreak = hasTodaySession ? 1:0;
 
 
-    useEffect(()=>{
-        const storedSessions = localStorage.getItem("sessions");
+    const getCurrentStreak=()=>{
+        if(sessions.length ===0) return 0;
 
-        if(storedSessions){
-            setSessions(JSON.parse(storedSessions));
+
+        const uniqueDates = [
+            ...new Set(sessions.map((s) => s.date))
+        ];
+
+         const sortedDates = uniqueDates
+        .map(date => new Date(date))
+        .sort((a, b) => b - a);
+
+        let streak =0;
+        let currentDate = new Date();
+
+        currentDate.setHours(0,0,0,0)
+
+        for(let i=0; i<sortedDates.length; i++){
+            const sessionDate = new Date(sortedDates[i]);
+            sessionDate.setHours(0,0,0,0);
+
+           const diff =
+            (currentDate - sessionDate) / (1000 * 60 * 60 * 24);
+
+
+            if(diff ===0){
+                streak++;
+                 currentDate.setDate(currentDate.getDate() - 1);
+
+                
+
+            }else if(diff===1){
+                streak++;
+                currentDate.setDate(currentDate.getDate() - 1);
+
+            }else{
+                break;
+            }
         }
-    },[]);
+        return streak;
+    };
+        const currentStreak = getCurrentStreak();
 
-    useEffect(()=>{
-        localStorage.setItem("sessions",JSON.stringify(sessions));
-    },[sessions]);
+    useEffect(() => {
+        localStorage.setItem("sessions", JSON.stringify(sessions));
+    }, [sessions]);
 
 
+
+    /*Delete Session*/
+
+    const handleDelete = (id) => {
+        const confirmDelete = window.confirm(
+            "Are you sure want to delete this session?"
+        );
+
+        if (!confirmDelete) return;
+        const updatedSessions = sessions.filter(
+            (session) => session.id !== id
+        );
+
+        setSessions(updatedSessions);
+    }
 
     return (
         <div>
@@ -87,11 +143,105 @@ function Dashboard() {
 
 
             </div>
+
+            {/*Session List */}
+            {/* <div className="mt-10">
+                {sessions.length === 0 ? (
+                <div className="bg-zinc-800 p-10 rounded-xl text-center shadow-md">
+                    <h2 className="text-xl font-semibold mb-3">
+                     No sessions yet 🚀
+                    </h2>
+                <p className="text-zinc-400">
+                      Start tracking your coding journey and build your streak!
+                 </p>
+                 </div>
+  
+                ):(
+                    <div className="bg-zinc-800 rounded-xl overflow-hidden">
+                        <table className="w-full text-left">
+                            <thead className="bg-zinc-700 text-sm uppercase">
+                                <tr>
+                                    <th className="p-3">Date</th>
+                                    <th className="p-3">Category</th>
+                                    <th className="p-3">Duration</th>
+                                    <th className="p-3">Notes</th>
+                                    <th className="p-3">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {sessions.map((session)=>(
+                                    <tr key={session.id} className="border-t border-zinc-700">
+                                        <td className="p-3">{session.date}</td>
+                                        <td className="p-3">{session.category}</td>
+                                        <td className="p-3">{session.duration} min</td>
+                                        <td className="p-3">{session.notes}</td>
+                                        <td className="p-3">
+                                            <button
+                                            onClick={()=> handleDelete(session.id)}
+                                            className="bg-red-600 hover:bg-red-500 px-3 py-1 rounded-md text-md text-sm transition">
+                                                Delete
+                                            </button>
+                                        </td>
+                                    </tr>
+                                )
+
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+                )
+                }
+
+            </div> */}
+
+            <div className="mt-10">
+                {sessions.length === 0 ? (
+                    <div className="bg-zinc-800 p-10 rounded-xl text-center shadow-md">
+                        <h2 className="text-xl font-semibold mb-3">
+                            No sessions yet 🚀
+                        </h2>
+                        <p className="text-zinc-400">
+                            Start tracking your coding journey and build your streak!
+                        </p>
+                    </div>
+                ) : (
+                    <div className="space-y-4">
+                        {sessions.map((session) => (
+                            <div
+                                key={session.id}
+                                className="bg-zinc-800 p-4 rounded-lg flex justify-between items-center shadow"
+                            >
+                                <div>
+                                    <p className="font-medium">{session.category}</p>
+                                    <p className="text-sm text-zinc-400">
+                                        {session.duration} mins • {session.date}
+                                    </p>
+                                </div>
+
+                                <button
+                                    onClick={() =>
+                                        setSessions(
+                                            sessions.filter((s) => s.id !== session.id)
+                                        )
+                                    }
+                                    className="text-red-400 hover:text-red-300"
+                                >
+                                    Delete
+                                </button>
+                            </div>
+                        ))}
+                    </div>
+                )}
+            </div>
+
+
+
+
             <AddSessionModal
                 isOpen={isOpen}
                 onClose={() => setIsOpen(false)}
                 onSave={(session) =>
-                    setSessions([...sessions, session])
+                    setSessions((prev) => [...prev, session])
                 }
             />
 
